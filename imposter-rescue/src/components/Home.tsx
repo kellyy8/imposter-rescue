@@ -32,7 +32,7 @@ const STAR_EVENTS_STORAGE_KEY = 'imposter-rescue-star-events';
 
 const ALL_BADGES: Array<{ id: string; name: string }> = [
   { id: 'mission-1-stage-confidence', name: 'Stage Confidence' },
-  { id: 'mission-2-physics-champion', name: 'Physics Champion' },
+  { id: 'mission-2-gravity-defier', name: 'Gravity Defier' },
   { id: 'mission-3-resilience-builder', name: 'Resilience Builder' },
   { id: 'mission-4-dance-achiever', name: 'Dance Achiever' },
 ];
