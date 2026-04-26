@@ -231,11 +231,22 @@ const GameMap = () => {
               type="button"
               onClick={() => {
                 if (node.id === 1) {
-                  setShowJournal(true);
-                  return;
+                  navigate('/home');
                 }
                 if (node.id === 2) {
                   navigate('/mission1');
+                }
+                if (node.id === 3) {
+                  navigate('/mission2');
+                }
+                if (node.id === 4) {
+                  navigate('/mission3');
+                }
+                if (node.id === 5) {
+                  navigate('/mission4');
+                }
+                if (node.id === 6) {
+                  navigate('/store');
                 }
               }}
               style={{ ...pinButtonStyle, backgroundColor: node.color }}
