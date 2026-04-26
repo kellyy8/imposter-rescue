@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 import { Home, ShoppingBag, FlaskConical, Briefcase, Music, PersonStanding } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -18,8 +18,29 @@ interface BadgeEntry {
   badgeName: string;
 }
 
+interface StarEventEntry {
+  id: string;
+  earnedAt: string;
+  missionLabel: string;
+  activityLabel: string;
+  stars: number;
+}
+
 const JOURNAL_STORAGE_KEY = 'imposter-rescue-journal';
 const BADGE_STORAGE_KEY = 'imposter-rescue-badges';
+const STAR_EVENTS_STORAGE_KEY = 'imposter-rescue-star-events';
+
+function readStoredList<T>(key: string): T[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as T[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 const screenStyle: CSSProperties = {
   minHeight: '100vh',
@@ -112,33 +133,11 @@ const GameMap = () => {
   const navigate = useNavigate();
   const [showJournal, setShowJournal] = useState(false);
 
-  const journalEntries = useMemo<JournalEntry[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const raw = window.localStorage.getItem(JOURNAL_STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as JournalEntry[];
-      if (!Array.isArray(parsed)) return [];
-      return parsed;
-    } catch {
-      return [];
-    }
-  }, [showJournal]);
+  const journalEntries = readStoredList<JournalEntry>(JOURNAL_STORAGE_KEY);
+  const badgeEntries = readStoredList<BadgeEntry>(BADGE_STORAGE_KEY);
+  const starEvents = readStoredList<StarEventEntry>(STAR_EVENTS_STORAGE_KEY);
 
-  const badgeEntries = useMemo<BadgeEntry[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const raw = window.localStorage.getItem(BADGE_STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as BadgeEntry[];
-      if (!Array.isArray(parsed)) return [];
-      return parsed;
-    } catch {
-      return [];
-    }
-  }, [showJournal]);
-
-  const totalBadges = badgeEntries.length;
+  const totalStars = starEvents.reduce((sum, event) => sum + event.stars, 0);
 
   const nodes = [
     {
@@ -205,7 +204,7 @@ const GameMap = () => {
         </button>
         <div style={starBadgeStyle}>
           <span style={{ fontSize: '1.1rem' }}>⭐</span>
-          <span>{totalBadges}</span>
+          <span>{totalStars}</span>
         </div>
       </div>
 

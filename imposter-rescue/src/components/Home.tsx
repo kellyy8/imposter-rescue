@@ -16,10 +16,19 @@ interface JournalEntry {
   response: string;
 }
 
+interface StarEventEntry {
+  id: string;
+  earnedAt: string;
+  missionLabel: string;
+  activityLabel: string;
+  stars: number;
+}
+
 type HomeView = 'home' | 'badges' | 'journal';
 
 const BADGE_STORAGE_KEY = 'imposter-rescue-badges';
 const JOURNAL_STORAGE_KEY = 'imposter-rescue-journal';
+const STAR_EVENTS_STORAGE_KEY = 'imposter-rescue-star-events';
 
 const ALL_BADGES: Array<{ id: string; name: string }> = [
   { id: 'mission-1-stage-confidence', name: 'Stage Confidence' },
@@ -438,9 +447,14 @@ export default function Home() {
 
   const badgeEntries = readStoredList<BadgeEntry>(BADGE_STORAGE_KEY);
   const journalEntries = readStoredList<JournalEntry>(JOURNAL_STORAGE_KEY);
+  const starEvents = readStoredList<StarEventEntry>(STAR_EVENTS_STORAGE_KEY);
 
   const earnedIds = useMemo(() => new Set(badgeEntries.map((entry) => entry.id)), [badgeEntries]);
   const earnedCount = earnedIds.size;
+  const totalStars = useMemo(
+    () => starEvents.reduce((sum, event) => sum + event.stars, 0),
+    [starEvents]
+  );
   const journalCount = journalEntries.length;
 
   return (
@@ -456,7 +470,7 @@ export default function Home() {
         </Link>
         <div style={starBadgeStyle}>
           <span style={{ fontSize: '1.1rem' }}>⭐</span>
-          <span>{earnedCount}</span>
+          <span>{totalStars}</span>
         </div>
       </div>
 

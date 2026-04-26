@@ -21,8 +21,17 @@ interface BadgeEntry {
 	badgeName: string;
 }
 
+interface StarEventEntry {
+	id: string;
+	earnedAt: string;
+	missionLabel: string;
+	activityLabel: string;
+	stars: number;
+}
+
 const JOURNAL_STORAGE_KEY = 'imposter-rescue-journal';
 const BADGE_STORAGE_KEY = 'imposter-rescue-badges';
+const STAR_EVENTS_STORAGE_KEY = 'imposter-rescue-star-events';
 const JOURNAL_PROMPT = "When was the last time your 'noise' was louder than your 'music'?";
 const MISSION_ONE_BADGE = 'Stage Confidence';
 
@@ -181,6 +190,18 @@ export default function Mission1() {
 	});
 	const [journalResponse, setJournalResponse] = useState('');
 	const [journalSaveStatus, setJournalSaveStatus] = useState<string | null>(null);
+	const [totalStars, setTotalStars] = useState(() => {
+		if (typeof window === 'undefined') return 0;
+		try {
+			const raw = window.localStorage.getItem(STAR_EVENTS_STORAGE_KEY);
+			if (!raw) return 0;
+			const parsed = JSON.parse(raw) as StarEventEntry[];
+			if (!Array.isArray(parsed)) return 0;
+			return parsed.reduce((sum, event) => sum + event.stars, 0);
+		} catch {
+			return 0;
+		}
+	});
 
 	const remainingThoughts = useMemo(
 		() => distortedThoughts.filter((thought) => !popped.includes(thought)),
@@ -335,6 +356,7 @@ export default function Mission1() {
 			const next = [...current, thought];
 			if (!activityOneDoneLineSpokenRef.current && next.length === distortedThoughts.length) {
 				activityOneDoneLineSpokenRef.current = true;
+				awardStarsForActivity('mission-1-activity-1', 'Activity 1: The Word Storm');
 				speakDexter("It's hard to hear the music over the noise, isn't it?", 1.0);
 			}
 			if (!halfwayLineSpokenRef.current && next.length >= Math.ceil(distortedThoughts.length / 2)) {
@@ -353,6 +375,51 @@ export default function Mission1() {
 	}
 
 	const lyricSolved = slots.verb === 'leading' && slots.noun === 'truth';
+
+	function readStarEvents(): StarEventEntry[] {
+		if (typeof window === 'undefined') return [];
+		try {
+			const raw = window.localStorage.getItem(STAR_EVENTS_STORAGE_KEY);
+			if (!raw) return [];
+			const parsed = JSON.parse(raw) as StarEventEntry[];
+			return Array.isArray(parsed) ? parsed : [];
+		} catch {
+			return [];
+		}
+	}
+
+	function refreshTotalStars() {
+		const events = readStarEvents();
+		setTotalStars(events.reduce((sum, event) => sum + event.stars, 0));
+	}
+
+	function awardStarsForActivity(eventId: string, activityLabel: string) {
+		if (typeof window === 'undefined') return;
+
+		try {
+			const existing = readStarEvents();
+			if (existing.some((entry) => entry.id === eventId)) {
+				refreshTotalStars();
+				return;
+			}
+
+			const next: StarEventEntry[] = [
+				...existing,
+				{
+					id: eventId,
+					earnedAt: new Date().toISOString(),
+					missionLabel: 'Mission 1: The Silent Headliner',
+					activityLabel,
+					stars: 10,
+				},
+			];
+
+			window.localStorage.setItem(STAR_EVENTS_STORAGE_KEY, JSON.stringify(next));
+			refreshTotalStars();
+		} catch {
+			// Star tracking should not block gameplay.
+		}
+	}
 
 	useEffect(() => {
 		if (stage !== 'lyric') {
@@ -406,7 +473,7 @@ export default function Mission1() {
 				</p>
 				<div style={starBadgeStyle}>
 					<span style={{ fontSize: '1.1rem' }}>⭐</span>
-					<span>0</span>
+					<span>{totalStars}</span>
 				</div>
 			</div>
 
@@ -691,6 +758,7 @@ export default function Mission1() {
 									type="button"
 									style={primaryButtonStyle}
 									onClick={() => {
+										awardStarsForActivity('mission-1-activity-2', 'Activity 2: The Resonant Lyric');
 										awardMissionOneBadge();
 										setStage('done');
 									}}
@@ -709,6 +777,20 @@ export default function Mission1() {
 						animate={{ opacity: 1, y: 0 }}
 						style={{ ...cardStyle, marginTop: '1.25rem' }}
 					>
+						<div
+							style={{
+								marginBottom: '1rem',
+								borderRadius: '12px',
+								padding: '0.8rem 1rem',
+								background: '#fef3c7',
+								border: '1px solid #fcd34d',
+								color: '#92400e',
+								fontWeight: 800,
+								fontSize: '0.95rem',
+							}}
+						>
+							"{MISSION_ONE_BADGE}" badge earned!
+						</div>
 						<h3 style={{ margin: '0 0 0.5rem', color: '#4c1d95', fontWeight: 800 }}>Reflection (Optional)</h3>
 						<p style={{ marginTop: 0, opacity: 0.75, marginBottom: '0.85rem', fontSize: '0.95rem' }}>{JOURNAL_PROMPT}</p>
 						<textarea
