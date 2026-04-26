@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { cld } from '../cloudinary/config';
 import { speakDexter } from '../services/speak';
 
 type MissionStage = 'intro' | 'storm' | 'lyric' | 'done';
@@ -38,55 +37,137 @@ const distortedThoughts = [
 	'You will freeze out there',
 ];
 
-const backgroundImage = cld
-	.image('glp_slpokv')
-	.addTransformation('c_fill,w_1600,h_1000/e_blur:220/o_65/f_auto/q_auto')
-	.toURL();
-
-const avatarImage = cld
-	.image('ai-generated-a-guy-standing-in-middle-of-the-stage-and-singing-with-a-microphone-behind-him-free-photo_zz9h4s')
-	.addTransformation('c_fill,w_280,h_280,g_face/f_auto/q_auto')
-	.toURL();
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const pageStyle: CSSProperties = {
 	minHeight: '100vh',
-	padding: '2rem',
-	position: 'relative',
-	overflow: 'hidden',
-	color: '#f4f6fb',
+	background: '#f0f0f8',
+	fontFamily: "'Nunito', 'Segoe UI', sans-serif",
+	color: '#1a1a2e',
 };
 
-const panelStyle: CSSProperties = {
-	position: 'relative',
-	zIndex: 3,
-	maxWidth: '980px',
-	margin: '0 auto',
-	background: 'rgba(15, 20, 36, 0.82)',
-	border: '1px solid rgba(255,255,255,0.18)',
-	borderRadius: '24px',
+const topBarStyle: CSSProperties = {
+	width: '100%',
+	display: 'flex',
+	alignItems: 'center',
+	justifyContent: 'space-between',
+	padding: '0.75rem 1.5rem',
+	background: '#ffffff',
+	borderBottom: '1px solid rgba(0,0,0,0.07)',
+	boxSizing: 'border-box',
+};
+
+const mapButtonStyle: CSSProperties = {
+	display: 'flex',
+	alignItems: 'center',
+	gap: '0.4rem',
+	background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+	color: '#ffffff',
+	border: 'none',
+	borderRadius: '10px',
+	padding: '0.5rem 1rem',
+	fontWeight: 700,
+	fontSize: '0.9rem',
+	cursor: 'pointer',
+	textDecoration: 'none',
+};
+
+const starBadgeStyle: CSSProperties = {
+	display: 'flex',
+	alignItems: 'center',
+	gap: '0.4rem',
+	background: '#ffffff',
+	border: '2px solid #f59e0b',
+	borderRadius: '10px',
+	padding: '0.4rem 0.8rem',
+	fontWeight: 700,
+	fontSize: '1rem',
+	color: '#92400e',
+};
+
+const subBarStyle: CSSProperties = {
+	display: 'flex',
+	alignItems: 'center',
+	gap: '0.75rem',
+	padding: '0.65rem 1.5rem',
+	background: '#ffffff',
+	borderBottom: '1px solid rgba(0,0,0,0.06)',
+};
+
+const backLinkStyle: CSSProperties = {
+	display: 'flex',
+	alignItems: 'center',
+	gap: '0.3rem',
+	background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+	color: '#ffffff',
+	border: 'none',
+	borderRadius: '8px',
+	padding: '0.4rem 0.9rem',
+	fontWeight: 700,
+	fontSize: '0.85rem',
+	cursor: 'pointer',
+	textDecoration: 'none',
+};
+
+const pageTitleStyle: CSSProperties = {
+	display: 'flex',
+	alignItems: 'center',
+	gap: '0.5rem',
+	fontWeight: 700,
+	fontSize: '1rem',
+	color: '#1a1a2e',
+	margin: 0,
+};
+
+const contentWrapStyle: CSSProperties = {
+	maxWidth: '860px',
+	margin: '2rem auto',
+	padding: '0 1.25rem',
+};
+
+const cardStyle: CSSProperties = {
+	background: '#ffffff',
+	borderRadius: '20px',
+	border: '1px solid rgba(0,0,0,0.07)',
+	boxShadow: '0 4px 24px rgba(124, 58, 237, 0.07)',
 	padding: '1.5rem',
-	backdropFilter: 'blur(8px)',
 };
 
 const primaryButtonStyle: CSSProperties = {
 	border: 'none',
 	borderRadius: '999px',
-	padding: '0.75rem 1.2rem',
+	padding: '0.7rem 1.4rem',
 	fontWeight: 700,
 	cursor: 'pointer',
-	color: '#101b2d',
-	background: 'linear-gradient(120deg, #f4d472 0%, #85f4cc 100%)',
+	color: '#ffffff',
+	background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+	fontSize: '0.95rem',
+	boxShadow: '0 4px 14px rgba(124, 58, 237, 0.3)',
 };
 
 const secondaryButtonStyle: CSSProperties = {
-	border: '1px solid rgba(255,255,255,0.3)',
+	border: '1.5px solid #d1d5db',
 	borderRadius: '999px',
-	padding: '0.75rem 1.2rem',
+	padding: '0.7rem 1.4rem',
 	fontWeight: 600,
 	cursor: 'pointer',
-	color: '#f8fafc',
-	background: 'rgba(255,255,255,0.06)',
+	color: '#374151',
+	background: '#ffffff',
+	fontSize: '0.95rem',
 };
+
+const themePillStyle: CSSProperties = {
+	display: 'inline-block',
+	background: 'linear-gradient(135deg, #7c3aed, #ec4899)',
+	color: '#ffffff',
+	borderRadius: '999px',
+	padding: '0.3rem 0.85rem',
+	fontSize: '0.8rem',
+	fontWeight: 700,
+	letterSpacing: '0.02em',
+};
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function createBubblePosition(index: number): { x: number; y: number } {
 	const x = 14 + ((index * 11) % 68);
@@ -95,7 +176,6 @@ function createBubblePosition(index: number): { x: number; y: number } {
 }
 
 function getStormGain(progress: number): number {
-	// Audible static at start, then drops toward near-silent as the storm clears.
 	return 0.01 + (1 - progress) * 0.1;
 }
 
@@ -104,6 +184,8 @@ function deterministicNoiseSample(index: number): number {
 	const normalized = seed - Math.floor(seed);
 	return normalized * 2 - 1;
 }
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Mission1() {
 	const audioContextRef = useRef<AudioContext | null>(null);
@@ -144,30 +226,20 @@ export default function Mission1() {
 	const startStormStaticNoise = useCallback(() => {
 		const context = ensureAudioContext();
 		if (!context) return;
-
-		if (context.state === 'suspended') {
-			void context.resume();
-		}
-
+		if (context.state === 'suspended') void context.resume();
 		if (!noiseGainRef.current) {
 			const gainNode = context.createGain();
 			gainNode.gain.value = getStormGain(stormProgress);
 			gainNode.connect(context.destination);
 			noiseGainRef.current = gainNode;
 		}
-
-		if (noiseSourceRef.current) {
-			return;
-		}
-
+		if (noiseSourceRef.current) return;
 		const bufferSize = context.sampleRate * 2;
 		const noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate);
 		const output = noiseBuffer.getChannelData(0);
-
 		for (let index = 0; index < bufferSize; index += 1) {
 			output[index] = deterministicNoiseSample(index);
 		}
-
 		const source = context.createBufferSource();
 		source.buffer = noiseBuffer;
 		source.loop = true;
@@ -187,21 +259,15 @@ export default function Mission1() {
 	function playPopSound() {
 		const context = ensureAudioContext();
 		if (!context) return;
-
-		if (context.state === 'suspended') {
-			void context.resume();
-		}
-
+		if (context.state === 'suspended') void context.resume();
 		const oscillator = context.createOscillator();
 		const gainNode = context.createGain();
 		oscillator.type = 'triangle';
 		oscillator.frequency.setValueAtTime(540, context.currentTime);
 		oscillator.frequency.exponentialRampToValueAtTime(280, context.currentTime + 0.08);
-
 		gainNode.gain.setValueAtTime(0.0001, context.currentTime);
 		gainNode.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.01);
 		gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.11);
-
 		oscillator.connect(gainNode);
 		gainNode.connect(context.destination);
 		oscillator.start();
@@ -215,10 +281,7 @@ export default function Mission1() {
 				"Can you hear them? They're chanting for someone else. I'm just a guy with a guitar who got lucky. I can't go out there.",
 				1.3
 			);
-
-			if (!didSpeak) {
-				setVoiceError('Web Speech API is not available in this browser.');
-			}
+			if (!didSpeak) setVoiceError('Web Speech API is not available in this browser.');
 		} catch {
 			setVoiceError('Could not play browser speech audio.');
 		}
@@ -231,10 +294,7 @@ export default function Mission1() {
 				'That... actually sounds like me. Thank you for staying here with me.',
 				0.9
 			);
-
-			if (!didSpeak) {
-				setVoiceError('Web Speech API is not available in this browser.');
-			}
+			if (!didSpeak) setVoiceError('Web Speech API is not available in this browser.');
 		} catch {
 			setVoiceError('Could not play browser speech audio.');
 		}
@@ -246,12 +306,10 @@ export default function Mission1() {
 			setJournalSaveStatus('Response is optional. Add text if you want to save an entry.');
 			return;
 		}
-
 		if (typeof window === 'undefined') {
 			setJournalSaveStatus('Journal is unavailable in this environment.');
 			return;
 		}
-
 		const entry: JournalEntry = {
 			id: `${Date.now()}`,
 			createdAt: new Date().toISOString(),
@@ -259,7 +317,6 @@ export default function Mission1() {
 			prompt: JOURNAL_PROMPT,
 			response: trimmed,
 		};
-
 		try {
 			const raw = window.localStorage.getItem(JOURNAL_STORAGE_KEY);
 			const existing = raw ? (JSON.parse(raw) as JournalEntry[]) : [];
@@ -272,21 +329,14 @@ export default function Mission1() {
 	}
 
 	function awardMissionOneBadge() {
-		if (typeof window === 'undefined') {
-			return;
-		}
-
+		if (typeof window === 'undefined') return;
 		try {
 			const raw = window.localStorage.getItem(BADGE_STORAGE_KEY);
 			const existing = raw ? (JSON.parse(raw) as BadgeEntry[]) : [];
 			const alreadyEarned = Array.isArray(existing)
 				? existing.some((entry) => entry.id === 'mission-1-stage-confidence')
 				: false;
-
-			if (alreadyEarned) {
-				return;
-			}
-
+			if (alreadyEarned) return;
 			const next: BadgeEntry[] = [
 				...(Array.isArray(existing) ? existing : []),
 				{
@@ -296,7 +346,6 @@ export default function Mission1() {
 					badgeName: MISSION_ONE_BADGE,
 				},
 			];
-
 			window.localStorage.setItem(BADGE_STORAGE_KEY, JSON.stringify(next));
 		} catch {
 			// Badge collection is a bonus layer; the mission can still complete without persistence.
@@ -308,12 +357,10 @@ export default function Mission1() {
 		playPopSound();
 		setPopped((current) => {
 			const next = [...current, thought];
-
 			if (!activityOneDoneLineSpokenRef.current && next.length === distortedThoughts.length) {
 				activityOneDoneLineSpokenRef.current = true;
 				speakDexter("It's hard to hear the music over the noise, isn't it?", 1.0);
 			}
-
 			if (!halfwayLineSpokenRef.current && next.length >= Math.ceil(distortedThoughts.length / 2)) {
 				halfwayLineSpokenRef.current = true;
 				speakDexter('Okay... it is getting quieter. I can breathe a little now.', 1.1);
@@ -336,7 +383,6 @@ export default function Mission1() {
 			completionLineSpokenRef.current = false;
 			return;
 		}
-
 		if (lyricSolved && !completionLineSpokenRef.current) {
 			completionLineSpokenRef.current = true;
 			playDexterConfidentLine();
@@ -369,103 +415,152 @@ export default function Mission1() {
 
 	return (
 		<div style={pageStyle}>
-			<div
-				style={{
-					position: 'absolute',
-					inset: 0,
-					backgroundImage: `url(${backgroundImage})`,
-					backgroundSize: 'cover',
-					backgroundPosition: 'center',
-					opacity: 0.7,
-				}}
-			/>
-			<div
-				style={{
-					position: 'absolute',
-					inset: 0,
-					background:
-						'radial-gradient(circle at 25% 20%, rgba(214, 95, 217, 0.28), transparent 42%), linear-gradient(180deg, rgba(4, 7, 17, 0.45) 0%, rgba(4, 7, 17, 0.9) 100%)',
-				}}
-			/>
-
-			<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={panelStyle}>
-				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-					<div>
-						<h1 style={{ margin: '0.4rem 0 0', fontSize: '1.9rem' }}>Dexter Mission: The Silent Headliner</h1>
-					</div>
-					<Link to="/" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>
-						Back to Map
-					</Link>
+			{/* Top navigation bar */}
+			<div style={topBarStyle}>
+				<Link to="/" style={mapButtonStyle}>
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+						<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+						<line x1="9" y1="3" x2="9" y2="18" />
+						<line x1="15" y1="6" x2="15" y2="21" />
+					</svg>
+					Map
+				</Link>
+				<div style={starBadgeStyle}>
+					<span style={{ fontSize: '1.1rem' }}>⭐</span>
+					<span>0</span>
 				</div>
+			</div>
 
-				<div style={{ marginTop: '1.3rem', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.2rem' }}>
-					<img
-						src={avatarImage}
-						alt="Dexter avatar"
-						style={{ width: '100%', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.2)' }}
-					/>
-					<div>
-						<p style={{ marginTop: 0, lineHeight: 1.6 }}>
-							Dexter is the headline act at a packed festival, but backstage he is frozen by the Imposter&apos;s Echo.
-							He believes the crowd is cheering for a version of him that is fake.
-						</p>
+			{/* Sub navigation */}
+			<div style={subBarStyle}>
+				<Link to="/" style={backLinkStyle}>
+					← Back
+				</Link>
+				<p style={pageTitleStyle}>
+					<span>🎵</span> Coachella Stage
+				</p>
+			</div>
 
-						{stage === 'intro' && (
-							<div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
-								<button
-									type="button"
-									style={primaryButtonStyle}
-									onClick={() => {
-										playDexterOpening();
-										setStormStarted(false);
-									}}
-								>
-									Hear Dexter (shaky voice)
-								</button>
-								<button
-									type="button"
-									style={secondaryButtonStyle}
-									onClick={() => {
-										setStage('storm');
-										setStormStarted(true);
-									}}
-								>
-									Start Activity 1: Word Storm
-								</button>
+			{/* Main content */}
+			<div style={contentWrapStyle}>
+				<motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
+					{/* Intro character card */}
+					<div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+						{/* Avatar circle */}
+						<div style={{
+							width: '72px',
+							height: '72px',
+							borderRadius: '9999px',
+							background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+							flexShrink: 0,
+							overflow: 'hidden',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							fontSize: '2rem',
+						}}>
+							🎤
+						</div>
+
+						<div style={{ flex: 1 }}>
+							<h2 style={{ margin: '0 0 0.5rem', fontSize: '1.25rem', fontWeight: 800, color: '#1a1a2e' }}>Dexter</h2>
+
+							<div style={{
+								background: '#f8f9ff',
+								border: '1px solid #e5e7eb',
+								borderRadius: '14px',
+								padding: '0.85rem 1rem',
+								lineHeight: 1.65,
+								color: '#374151',
+								fontSize: '0.95rem',
+								marginBottom: '0.85rem',
+							}}>
+								Dexter is headlining Coachella, but backstage he is frozen by the Imposter&apos;s Echo.
+							    He believes the crowd is cheering for a version of him that is fake.
 							</div>
-						)}
 
-						{voiceError && <p style={{ color: '#fca5a5', marginBottom: 0 }}>{voiceError}</p>}
+							<span style={themePillStyle}>Theme: Overcome imposter syndrome</span>
+
+							{voiceError && (
+								<p style={{ color: '#dc2626', marginTop: '0.6rem', marginBottom: 0, fontSize: '0.875rem' }}>{voiceError}</p>
+							)}
+						</div>
 					</div>
-				</div>
 
+					{/* Intro actions */}
+					{stage === 'intro' && (
+						<div style={{ marginTop: '1.25rem' }}>
+							<button
+								type="button"
+								style={{ ...primaryButtonStyle, width: '100%', fontSize: '1rem', padding: '0.9rem' }}
+								onClick={() => {
+									playDexterOpening();
+									setStormStarted(false);
+								}}
+							>
+								Hear Dexter (shaky voice)
+							</button>
+							<button
+								type="button"
+								style={{ ...secondaryButtonStyle, width: '100%', fontSize: '0.95rem', padding: '0.75rem', marginTop: '0.65rem' }}
+								onClick={() => {
+									setStage('storm');
+									setStormStarted(true);
+								}}
+							>
+								Start Activity 1: Word Storm
+							</button>
+						</div>
+					)}
+				</motion.div>
+
+				{/* Activity 1: Storm */}
 				{stage === 'storm' && (
-					<section style={{ marginTop: '1.3rem' }}>
-						<h2 style={{ margin: '0 0 0.6rem' }}>Activity 1: The Word Storm</h2>
-						<p style={{ marginTop: 0, opacity: 0.9 }}>
-							Pop all distorted thoughts. As you clear them, static noise drops and Dexter&apos;s voice becomes steady.
+					<motion.section
+						initial={{ opacity: 0, y: 12 }}
+						animate={{ opacity: 1, y: 0 }}
+						style={{ ...cardStyle, marginTop: '1.25rem' }}
+					>
+						<h2 style={{ margin: '0 0 0.4rem', fontSize: '1.15rem', fontWeight: 800, color: '#4c1d95' }}>
+							Activity 1: The Word Storm
+						</h2>
+						<p style={{ marginTop: 0, opacity: 0.75, fontSize: '0.92rem', marginBottom: '0.9rem' }}>
+							Pop all distorted thoughts. As you clear them, static noise drops and Dexter's voice becomes steady.
 						</p>
 
-						<div style={{ display: 'flex', gap: '1rem', marginBottom: '0.8rem', flexWrap: 'wrap' }}>
-							<div style={{ padding: '0.55rem 0.8rem', borderRadius: '999px', background: 'rgba(252, 211, 77, 0.14)' }}>
-								Static noise volume: {staticVolume}%
+						<div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+							<div style={{
+								padding: '0.45rem 1rem',
+								borderRadius: '999px',
+								background: '#fef9c3',
+								color: '#92400e',
+								fontWeight: 600,
+								fontSize: '0.85rem',
+								border: '1px solid #fde68a',
+							}}>
+								🔊 Static: {staticVolume}%
 							</div>
-							<div style={{ padding: '0.55rem 0.8rem', borderRadius: '999px', background: 'rgba(52, 211, 153, 0.14)' }}>
-								Voice clarity: {voiceClarity}%
+							<div style={{
+								padding: '0.45rem 1rem',
+								borderRadius: '999px',
+								background: '#d1fae5',
+								color: '#065f46',
+								fontWeight: 600,
+								fontSize: '0.85rem',
+								border: '1px solid #a7f3d0',
+							}}>
+								🎤 Clarity: {voiceClarity}%
 							</div>
 						</div>
 
-						<div
-							style={{
-								position: 'relative',
-								height: '320px',
-								borderRadius: '16px',
-								border: '1px solid rgba(255,255,255,0.16)',
-								background:
-									'linear-gradient(160deg, rgba(17, 25, 40, 0.78) 0%, rgba(31, 43, 64, 0.62) 100%)',
-								overflow: 'hidden',
-							}}
-						>
+						<div style={{
+							position: 'relative',
+							height: '300px',
+							borderRadius: '16px',
+							border: '1.5px solid #e9d5ff',
+							background: 'linear-gradient(145deg, #faf5ff 0%, #f0f0f8 100%)',
+							overflow: 'hidden',
+						}}>
 							{remainingThoughts.map((thought, index) => {
 								const pos = createBubblePosition(index + thought.length);
 								return (
@@ -482,11 +577,13 @@ export default function Mission1() {
 											left: `${pos.x}%`,
 											transform: 'translate(-50%, -50%)',
 											borderRadius: '999px',
-											border: '1px solid rgba(255,255,255,0.34)',
-											background: 'rgba(255,255,255,0.12)',
-											color: '#fef2f2',
-											padding: '0.55rem 0.9rem',
+											border: '1.5px solid #c4b5fd',
+											background: 'rgba(124, 58, 237, 0.1)',
+											color: '#4c1d95',
+											padding: '0.45rem 0.85rem',
 											cursor: 'pointer',
+											fontWeight: 600,
+											fontSize: '0.85rem',
 										}}
 									>
 										{thought}
@@ -496,18 +593,16 @@ export default function Mission1() {
 
 							{remainingThoughts.length === 0 && (
 								<div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-									<div style={{ textAlign: 'center' }}>
-										<h3 style={{ marginBottom: '0.4rem' }}>Storm Cleared</h3>
-										<p style={{ marginTop: 0, opacity: 0.9 }}>
+									<div style={{ textAlign: 'center', padding: '1rem' }}>
+										<div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✨</div>
+										<h3 style={{ marginBottom: '0.4rem', color: '#4c1d95' }}>Storm Cleared</h3>
+										<p style={{ marginTop: 0, opacity: 0.75, marginBottom: '1rem' }}>
 											Noise is down. Dexter can hear himself again.
 										</p>
 										<button
 											type="button"
 											style={primaryButtonStyle}
-											onClick={() => {
-												// playDexterConfidentLine();
-												setStage('lyric');
-											}}
+											onClick={() => setStage('lyric')}
 										>
 											Continue to Activity 2
 										</button>
@@ -517,32 +612,46 @@ export default function Mission1() {
 						</div>
 
 						{!stormStarted && (
-							<button type="button" style={{ ...secondaryButtonStyle, marginTop: '0.8rem' }} onClick={() => setStormStarted(true)}>
+							<button
+								type="button"
+								style={{ ...secondaryButtonStyle, marginTop: '0.8rem' }}
+								onClick={() => setStormStarted(true)}
+							>
 								Begin Storm
 							</button>
 						)}
-					</section>
+					</motion.section>
 				)}
 
+				{/* Activity 2: Lyric */}
 				{stage === 'lyric' && (
-					<section style={{ marginTop: '1.3rem' }}>
-						<h2 style={{ margin: '0 0 0.6rem' }}>Activity 2: The Resonant Lyric</h2>
-						<p style={{ marginTop: 0, opacity: 0.9 }}>
-							Drag words into the brackets to reframe Dexter&apos;s opening lyric.
+					<motion.section
+						initial={{ opacity: 0, y: 12 }}
+						animate={{ opacity: 1, y: 0 }}
+						style={{ ...cardStyle, marginTop: '1.25rem' }}
+					>
+						<h2 style={{ margin: '0 0 0.4rem', fontSize: '1.15rem', fontWeight: 800, color: '#4c1d95' }}>
+							Activity 2: The Resonant Lyric
+						</h2>
+						<p style={{ marginTop: 0, opacity: 0.75, fontSize: '0.92rem', marginBottom: '1rem' }}>
+							Drag words into the brackets to reframe Dexter's opening lyric.
 						</p>
 
-						<div style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
+						<div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.1rem' }}>
 							{['hiding', 'mask', 'leading', 'truth'].map((word) => (
 								<span
 									key={word}
 									draggable
 									onDragStart={(event) => event.dataTransfer.setData('text/plain', word)}
 									style={{
-										border: '1px solid rgba(255,255,255,0.3)',
+										border: '1.5px solid #c4b5fd',
 										borderRadius: '999px',
-										padding: '0.45rem 0.8rem',
+										padding: '0.4rem 0.9rem',
 										cursor: 'grab',
-										background: 'rgba(255,255,255,0.08)',
+										background: '#f5f3ff',
+										color: '#4c1d95',
+										fontWeight: 600,
+										fontSize: '0.9rem',
 									}}
 								>
 									{word}
@@ -550,12 +659,26 @@ export default function Mission1() {
 							))}
 						</div>
 
-						<p style={{ fontSize: '1.25rem' }}>
+						<div style={{
+							background: '#f8f9ff',
+							borderRadius: '12px',
+							padding: '1rem 1.2rem',
+							fontSize: '1.2rem',
+							color: '#1a1a2e',
+							border: '1.5px solid #e5e7eb',
+						}}>
 							I am{' '}
 							<span
 								onDrop={(event) => onDropWord('verb', event)}
 								onDragOver={(event) => event.preventDefault()}
-								style={{ borderBottom: '2px dashed #93c5fd', padding: '0.1rem 0.25rem' }}
+								style={{
+									borderBottom: '2.5px dashed #7c3aed',
+									padding: '0.1rem 0.3rem',
+									color: '#7c3aed',
+									fontWeight: 700,
+									minWidth: '60px',
+									display: 'inline-block',
+								}}
 							>
 								{slots.verb}
 							</span>{' '}
@@ -563,77 +686,97 @@ export default function Mission1() {
 							<span
 								onDrop={(event) => onDropWord('noun', event)}
 								onDragOver={(event) => event.preventDefault()}
-								style={{ borderBottom: '2px dashed #93c5fd', padding: '0.1rem 0.25rem' }}
+								style={{
+									borderBottom: '2.5px dashed #7c3aed',
+									padding: '0.1rem 0.3rem',
+									color: '#7c3aed',
+									fontWeight: 700,
+									minWidth: '60px',
+									display: 'inline-block',
+								}}
 							>
 								{slots.noun}
 							</span>
 							.
-						</p>
+						</div>
 
 						{lyricSolved && (
-							<div style={{ marginTop: '0.8rem' }}>
-								<p style={{ color: '#86efac', marginBottom: '0.7rem' }}>
+							<motion.div
+								initial={{ opacity: 0, y: 8 }}
+								animate={{ opacity: 1, y: 0 }}
+								style={{ marginTop: '1rem' }}
+							>
+								<div style={{
+									background: '#d1fae5',
+									border: '1px solid #a7f3d0',
+									borderRadius: '12px',
+									padding: '0.85rem 1rem',
+									color: '#065f46',
+									fontWeight: 600,
+									marginBottom: '0.9rem',
+									fontSize: '0.95rem',
+								}}>
 									"That... actually sounds like me. Thank you for staying here with me."
-								</p>
-										<button
-											type="button"
-											style={primaryButtonStyle}
-											onClick={() => {
-												awardMissionOneBadge();
-												setStage('done');
-											}}
-										>
-									Finish Mission
+								</div>
+								<button
+									type="button"
+									style={primaryButtonStyle}
+									onClick={() => {
+										awardMissionOneBadge();
+										setStage('done');
+									}}
+								>
+									Finish Mission #1
 								</button>
-							</div>
+							</motion.div>
 						)}
-					</section>
+					</motion.section>
 				)}
 
+				{/* Stage: done — reflection */}
 				{stage === 'done' && (
-					<section style={{ marginTop: '1.3rem' }}>
-						<div
-							style={{
-								marginTop: '1rem',
-								padding: '0.9rem',
-								borderRadius: '14px',
-								background: 'rgba(255, 255, 255, 0.05)',
-								border: '1px solid rgba(255,255,255,0.13)',
+					<motion.section
+						initial={{ opacity: 0, y: 12 }}
+						animate={{ opacity: 1, y: 0 }}
+						style={{ ...cardStyle, marginTop: '1.25rem' }}
+					>
+						<h3 style={{ margin: '0 0 0.5rem', color: '#4c1d95', fontWeight: 800 }}>Reflection (Optional)</h3>
+						<p style={{ marginTop: 0, opacity: 0.75, marginBottom: '0.85rem', fontSize: '0.95rem' }}>{JOURNAL_PROMPT}</p>
+						<textarea
+							value={journalResponse}
+							onChange={(event) => {
+								setJournalResponse(event.target.value);
+								setJournalSaveStatus(null);
 							}}
-						>
-							<h3 style={{ margin: '0 0 0.5rem' }}>Reflection (Optional)</h3>
-							<p style={{ marginTop: 0, opacity: 0.92 }}>{JOURNAL_PROMPT}</p>
-							<textarea
-								value={journalResponse}
-								onChange={(event) => {
-									setJournalResponse(event.target.value);
-									setJournalSaveStatus(null);
-								}}
-								placeholder="Write your reflection here."
-								rows={4}
-								style={{
-									width: '100%',
-									borderRadius: '10px',
-									border: '1px solid rgba(255,255,255,0.2)',
-									background: 'rgba(12, 19, 32, 0.85)',
-									color: '#f8fafc',
-									padding: '0.7rem',
-									resize: 'vertical',
-								}}
-							/>
-							<div style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap', marginTop: '0.7rem' }}>
-								<button type="button" style={primaryButtonStyle} onClick={saveJournalEntry}>
-									Save To Journal
-								</button>
-								<Link to="/" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>
-									View Journal Via Home
-								</Link>
-							</div>
-							{journalSaveStatus && <p style={{ marginBottom: 0, opacity: 0.9 }}>{journalSaveStatus}</p>}
+							placeholder="Write your reflection here."
+							rows={4}
+							style={{
+								width: '100%',
+								borderRadius: '12px',
+								border: '1.5px solid #e5e7eb',
+								background: '#f9fafb',
+								color: '#1a1a2e',
+								padding: '0.75rem',
+								resize: 'vertical',
+								fontSize: '0.95rem',
+								fontFamily: 'inherit',
+								boxSizing: 'border-box',
+							}}
+						/>
+						<div style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap', marginTop: '0.8rem' }}>
+							<button type="button" style={primaryButtonStyle} onClick={saveJournalEntry}>
+								Save To Journal
+							</button>
+							<Link to="/" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>
+								Back to Home
+							</Link>
 						</div>
-					</section>
+						{journalSaveStatus && (
+							<p style={{ marginBottom: 0, marginTop: '0.65rem', opacity: 0.85, fontSize: '0.88rem' }}>{journalSaveStatus}</p>
+						)}
+					</motion.section>
 				)}
-			</motion.div>
+			</div>
 		</div>
 	);
 }
