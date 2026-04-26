@@ -11,7 +11,15 @@ interface JournalEntry {
   response: string;
 }
 
+interface BadgeEntry {
+  id: string;
+  earnedAt: string;
+  missionLabel: string;
+  badgeName: string;
+}
+
 const JOURNAL_STORAGE_KEY = 'imposter-rescue-journal';
+const BADGE_STORAGE_KEY = 'imposter-rescue-badges';
 
 const screenStyle: CSSProperties = {
   minHeight: '100vh',
@@ -71,6 +79,20 @@ const GameMap = () => {
       const raw = window.localStorage.getItem(JOURNAL_STORAGE_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw) as JournalEntry[];
+      if (!Array.isArray(parsed)) return [];
+      return parsed;
+    } catch {
+      return [];
+    }
+  }, [showJournal]);
+
+  const badgeEntries = useMemo<BadgeEntry[]>(() => {
+    if (typeof window === 'undefined') return [];
+
+    try {
+      const raw = window.localStorage.getItem(BADGE_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as BadgeEntry[];
       if (!Array.isArray(parsed)) return [];
       return parsed;
     } catch {
@@ -209,9 +231,37 @@ const GameMap = () => {
             </div>
 
             <p style={{ opacity: 0.85, marginTop: '0.6rem' }}>
-              Reflections you saved after missions appear here.
+              Reflections and earned badges you saved after missions appear here.
             </p>
 
+            <section style={{ marginTop: '1rem' }}>
+              <h3 style={{ margin: '0 0 0.55rem' }}>Badges</h3>
+              {badgeEntries.length === 0 ? (
+                <p style={{ opacity: 0.8, marginBottom: 0 }}>No badges yet. Finish a mission to earn one.</p>
+              ) : (
+                <div style={{ display: 'grid', gap: '0.8rem' }}>
+                  {[...badgeEntries].reverse().map((badge) => (
+                    <article
+                      key={badge.id}
+                      style={{
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        borderRadius: '12px',
+                        padding: '0.75rem',
+                        background: 'rgba(255,255,255,0.04)',
+                      }}
+                    >
+                      <p style={{ margin: 0, fontSize: '0.82rem', opacity: 0.75 }}>
+                        {badge.missionLabel} • {new Date(badge.earnedAt).toLocaleString()}
+                      </p>
+                      <p style={{ margin: '0.45rem 0 0', fontWeight: 800 }}>{badge.badgeName}</p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section style={{ marginTop: '1rem' }}>
+              <h3 style={{ margin: '0 0 0.55rem' }}>Journal</h3>
             {journalEntries.length === 0 ? (
               <p style={{ opacity: 0.8, marginBottom: 0 }}>
                 No journal entries yet. Complete a mission and save your response to see it here.
@@ -237,6 +287,7 @@ const GameMap = () => {
                 ))}
               </div>
             )}
+            </section>
           </div>
         </div>
       )}

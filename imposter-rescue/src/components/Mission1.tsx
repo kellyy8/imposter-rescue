@@ -15,8 +15,17 @@ interface JournalEntry {
 	response: string;
 }
 
+interface BadgeEntry {
+	id: string;
+	earnedAt: string;
+	missionLabel: string;
+	badgeName: string;
+}
+
 const JOURNAL_STORAGE_KEY = 'imposter-rescue-journal';
+const BADGE_STORAGE_KEY = 'imposter-rescue-badges';
 const JOURNAL_PROMPT = "When was the last time your 'noise' was louder than your 'music'?";
+const MISSION_ONE_BADGE = 'Stage Confidence';
 
 const distortedThoughts = [
 	'One-hit wonder',
@@ -259,6 +268,38 @@ export default function Mission1() {
 			setJournalSaveStatus('Saved to your journal. Open Home to view it.');
 		} catch {
 			setJournalSaveStatus('Could not save to journal. Please try again.');
+		}
+	}
+
+	function awardMissionOneBadge() {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		try {
+			const raw = window.localStorage.getItem(BADGE_STORAGE_KEY);
+			const existing = raw ? (JSON.parse(raw) as BadgeEntry[]) : [];
+			const alreadyEarned = Array.isArray(existing)
+				? existing.some((entry) => entry.id === 'mission-1-stage-confidence')
+				: false;
+
+			if (alreadyEarned) {
+				return;
+			}
+
+			const next: BadgeEntry[] = [
+				...(Array.isArray(existing) ? existing : []),
+				{
+					id: 'mission-1-stage-confidence',
+					earnedAt: new Date().toISOString(),
+					missionLabel: 'Mission 1: The Silent Headliner',
+					badgeName: MISSION_ONE_BADGE,
+				},
+			];
+
+			window.localStorage.setItem(BADGE_STORAGE_KEY, JSON.stringify(next));
+		} catch {
+			// Badge collection is a bonus layer; the mission can still complete without persistence.
 		}
 	}
 
@@ -529,17 +570,22 @@ export default function Mission1() {
 							.
 						</p>
 
-						{lyricSolved ? (
+						{lyricSolved && (
 							<div style={{ marginTop: '0.8rem' }}>
 								<p style={{ color: '#86efac', marginBottom: '0.7rem' }}>
 									"That... actually sounds like me. Thank you for staying here with me."
 								</p>
-								<button type="button" style={primaryButtonStyle} onClick={() => setStage('done')}>
+										<button
+											type="button"
+											style={primaryButtonStyle}
+											onClick={() => {
+												awardMissionOneBadge();
+												setStage('done');
+											}}
+										>
 									Finish Mission
 								</button>
 							</div>
-						) : (
-							<p style={{ opacity: 0.85 }}>Target lyric: I am leading with my truth.</p>
 						)}
 					</section>
 				)}
