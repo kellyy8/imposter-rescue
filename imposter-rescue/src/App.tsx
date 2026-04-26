@@ -1,10 +1,16 @@
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import GameMap from './components/GameMap';
+import Mission1 from './components/Mission1';
 
 function App() {
   return (
-    <div className="App">
-      <GameMap />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<GameMap />} />
+        <Route path="/mission1" element={<Mission1 />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
