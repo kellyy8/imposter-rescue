@@ -85,30 +85,6 @@ const starBadgeStyle: CSSProperties = {
 	color: '#92400e',
 };
 
-const subBarStyle: CSSProperties = {
-	display: 'flex',
-	alignItems: 'center',
-	gap: '0.75rem',
-	padding: '0.65rem 1.5rem',
-	background: '#ffffff',
-	borderBottom: '1px solid rgba(0,0,0,0.06)',
-};
-
-const backLinkStyle: CSSProperties = {
-	display: 'flex',
-	alignItems: 'center',
-	gap: '0.3rem',
-	background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-	color: '#ffffff',
-	border: 'none',
-	borderRadius: '8px',
-	padding: '0.4rem 0.9rem',
-	fontWeight: 700,
-	fontSize: '0.85rem',
-	cursor: 'pointer',
-	textDecoration: 'none',
-};
-
 const pageTitleStyle: CSSProperties = {
 	display: 'flex',
 	alignItems: 'center',
@@ -425,20 +401,13 @@ export default function Mission1() {
 					</svg>
 					Map
 				</Link>
+                <p style={pageTitleStyle}>
+					<span>🎵</span> Mission #1: Coachella Stage
+				</p>
 				<div style={starBadgeStyle}>
 					<span style={{ fontSize: '1.1rem' }}>⭐</span>
 					<span>0</span>
 				</div>
-			</div>
-
-			{/* Sub navigation */}
-			<div style={subBarStyle}>
-				<Link to="/" style={backLinkStyle}>
-					← Back
-				</Link>
-				<p style={pageTitleStyle}>
-					<span>🎵</span> Coachella Stage
-				</p>
 			</div>
 
 			{/* Main content */}
